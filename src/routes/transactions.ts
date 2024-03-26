@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { FastifyInstance } from 'fastify'
 import { fetchAllData } from '../database'
-import { sendMessageToQueue } from '../services/sqs'
+import { sendMessageToQueue } from '../services/sqs/sender'
 
 export async function transactionsRoutes(app: FastifyInstance) {
   app.post('/', async (request, reply) => {
