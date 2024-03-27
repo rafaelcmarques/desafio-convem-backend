@@ -3,7 +3,9 @@ import { DynamoDB, ScanCommand } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 
 interface Item {
-  [key: string]: any
+  id: string
+  amount: string
+  type: string
 }
 
 const dbClient = new DynamoDB(credentials)
@@ -16,7 +18,9 @@ export const fetchAllData = async (tableName: string) => {
   }
 
   try {
-    const data = await docClient.send(new ScanCommand(scanParams))
+    const data = (await docClient.send(new ScanCommand(scanParams))) as {
+      Items: Item[] | undefined
+    }
     if (data.Items) {
       const transformedData = formatData(data.Items)
       return transformedData
@@ -29,10 +33,15 @@ export const fetchAllData = async (tableName: string) => {
 
 function formatData(items: Item[]) {
   return items.map((item) => {
-    const transformedItem: Record<string, any> = {}
+    const transformedItem: Item = {} as Item
     for (const key in item) {
-      if (Object.hasOwnProperty.call(item, key)) {
-        transformedItem[key] = item[key][Object.keys(item[key])[0]]
+      if (Object.prototype.hasOwnProperty.call(item, key)) {
+        const value = item[key as keyof Item]
+        if (typeof value === 'object' && value !== null) {
+          transformedItem[key as keyof Item] = value[Object.keys(value)[0]]
+        } else {
+          transformedItem[key as keyof Item] = value
+        }
       }
     }
     return transformedItem
